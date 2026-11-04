@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Replaces AICR's embedded monitoring-hpa overlay. That overlay matches every
+# recipe (criteria intent: any) and adds prometheus-adapter, which depends on
+# kube-prometheus-stack. Neither belongs in the controller stack.
+apiVersion: aicr.run/v1beta1
+kind: RecipeMetadata
+metadata:
+  name: monitoring-hpa
+spec:
+  base: base
+  criteria:
+    intent: any
+  componentRefs: []

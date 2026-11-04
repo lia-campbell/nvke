@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# AICR component registry for the NVKE controller stack.
+#
+# This directory is an AICR external data catalog. AICR layers it over its
+# embedded catalog with `aicr bundle --data deploy/aicr`. External entries
+# win on a name clash; cert-manager is not listed here and comes from AICR's
+# embedded registry.
+#
+# One entry per chart the stack installs. The version is the chart version.
+# Image references live in the values files under components/.
+apiVersion: aicr.run/v1beta1
+kind: ComponentRegistry
+components:
+  - name: nktp
+    displayName: NKTP telemetry pipeline
+    class: core
+    helm:
+      defaultRepository: oci://ghcr.io/dsx-ai-factory/nvke/charts
+      defaultChart: nktp
+      defaultVersion: "0.1.1-rc.3"
+      defaultNamespace: nktp
+
+  - name: postgresql
+    displayName: PostgreSQL
+    class: core
+    helm:
+      defaultRepository: oci://registry-1.docker.io/bitnamicharts
+      defaultChart: postgresql
+      defaultVersion: "18.5.15"
+      defaultNamespace: postgres
+
+  - name: spire-crds
+    displayName: SPIRE CRDs
+    class: core
+    helm:
+      defaultRepository: https://spiffe.github.io/helm-charts-hardened/
+      defaultChart: spire-crds
+      defaultVersion: "0.6.1"
+      defaultNamespace: spire-server
+
+  - name: temporal
+    displayName: Temporal
+    class: core
+    helm:
+      defaultRepository: https://go.temporal.io/helm-charts
+      defaultChart: temporal
+      defaultVersion: "0.74.0"
+      defaultNamespace: temporal
+
+  - name: spire
+    displayName: SPIRE
+    class: core
+    helm:
+      defaultRepository: https://spiffe.github.io/helm-charts-hardened/
+      defaultChart: spire
+      defaultVersion: "0.30.1"
+      defaultNamespace: spire-server
+
+  - name: nvke-controller
+    displayName: NVKE controller
+    class: core
+    helm:
+      defaultRepository: oci://ghcr.io/dsx-ai-factory/nvke/charts
+      defaultChart: nvke-controller
+      # The chart publish workflow tags the chart with the controller release.
+      # This pin is not verified against the registry yet.
+      defaultVersion: "0.3.1-rc.1"
+      defaultNamespace: nvke-controller
