@@ -1,32 +1,10 @@
-# Download and Install nvkectl
+# Build and Install nvkectl
 
 `nvkectl` is the NVKE control-plane CLI. You use it to validate and bootstrap a management cluster from a declarative site spec file, and to manage tenant cluster lifecycle.
 
-Releases are published under `cli/v*` tags at https://github.com/dsx-ai-factory/nvke/releases.
-
-## Download
-
-```bash
-# Set RELEASE to a cli/ tag listed at https://github.com/dsx-ai-factory/nvke/releases
-export RELEASE=cli/vX.Y.Z
-
-# Detects linux/darwin and amd64/arm64 (uname reports x86_64, aarch64, or arm64)
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-curl -fsSL -o nvkectl \
-  "https://github.com/dsx-ai-factory/nvke/releases/download/${RELEASE}/nvkectl-${OS}-${ARCH}"
-chmod +x nvkectl && sudo mv nvkectl /usr/local/bin/
-```
-
-Verify the download with `checksums.txt` from the same release.
-
-## Verify
-
-```bash
-nvkectl version
-```
-
 ## Build from Source
+
+`nvkectl` is not published as a download; build it from a checkout.
 
 ```bash
 git clone https://github.com/dsx-ai-factory/nvke.git
@@ -36,6 +14,12 @@ make -C cli build   # → cli/bin/nvkectl; not `go build`, which leaves the Clus
 
 `make build` at the repository root builds every module and copies `nvkectl` to
 `bin/` as well; it needs GNU Make 4.0+ (`gmake` on macOS).
+
+## Verify
+
+```bash
+nvkectl version
+```
 
 ## Additional Prerequisites for Bootstrap
 
