@@ -49,6 +49,17 @@ components:
       defaultVersion: "0.74.0"
       defaultNamespace: temporal
 
+  # Manifest only. Its release lives in default, because Helm needs the
+  # release namespace to exist before it creates anything.
+  - name: spire-namespaces
+    displayName: SPIRE namespaces
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultNamespace: default
+    manifestFiles:
+      - components/spire-namespaces/namespaces.yaml
+
   - name: spire
     displayName: SPIRE
     class: core

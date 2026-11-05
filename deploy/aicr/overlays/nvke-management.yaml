@@ -10,8 +10,8 @@
 # The componentRefs name no source. The registry entry is the only place a
 # chart lives, so the resolve can bind it and AICR checks its digest.
 #
-# Order comes from dependencyRefs: cert-manager, nktp, postgresql, spire-crds,
-# temporal, spire, nvke-controller.
+# Order comes from dependencyRefs: cert-manager, nktp, postgresql,
+# spire-namespaces, spire-crds, spire, temporal, nvke-controller.
 #
 # The cluster needs a default StorageClass. PostgreSQL and SPIRE take a PVC.
 #
@@ -22,6 +22,9 @@
 #   dgxc-tenant-credentials  nvke-controller; keys user, password
 #   spire-upstream-ca        spire-server; only when SPIRE chains to an
 #                            upstream CA
+#
+# The operator also creates the nktp-cluster ConfigMap in nktp, key name, the
+# cluster name. nktp's collectors do not start without it.
 #
 # Site values the operator passes at bundle time. The values files leave them
 # unset.
@@ -68,8 +71,13 @@ spec:
       type: Helm
       valuesFile: components/postgresql/values.yaml
 
+    - name: spire-namespaces
+      type: Helm
+
     - name: spire-crds
       type: Helm
+      dependencyRefs:
+        - spire-namespaces
 
     # The schema jobs create the temporal databases in PostgreSQL.
     - name: temporal
@@ -92,6 +100,7 @@ spec:
         - components/spire/manifests/tpm-pubhashes.yaml
       dependencyRefs:
         - spire-crds
+        - spire-namespaces
         - cert-manager
         - nktp
 
