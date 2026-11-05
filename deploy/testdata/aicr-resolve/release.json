@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "nvkr.dev/release-description/v1",
+  "reference": "registry.example.com/nvke/releases@sha256:0000000000000000000000000000000000000000000000000000000000000001",
+  "rootDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+  "totalOutputs": 8,
+  "outputs": [
+    {
+      "name": "cwe",
+      "kind": "oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+      "reference": "registry.example.com/nvke/nvke-controller@sha256:0000000000000000000000000000000000000000000000000000000000000002",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "name": "controller-profiles",
+      "kind": "oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003",
+      "reference": "registry.example.com/nvke/controller-profiles@sha256:0000000000000000000000000000000000000000000000000000000000000003",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "name": "controller-chart",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004",
+      "reference": "registry.example.com/nvke/charts/nvke-controller@sha256:0000000000000000000000000000000000000000000000000000000000000004",
+      "chartVersion": "0.4.0",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "name": "nktp",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005",
+      "reference": "registry.example.com/nvke/charts/nktp@sha256:0000000000000000000000000000000000000000000000000000000000000005",
+      "chartVersion": "0.4.0",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "name": "postgresql",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000006",
+      "reference": "registry.example.com/nvke/charts/postgresql@sha256:0000000000000000000000000000000000000000000000000000000000000006",
+      "chartVersion": "18.5.15",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "name": "spire-crds",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000007",
+      "reference": "registry.example.com/nvke/charts/spire-crds@sha256:0000000000000000000000000000000000000000000000000000000000000007",
+      "chartVersion": "0.6.1",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "name": "spire",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000008",
+      "reference": "registry.example.com/nvke/charts/spire@sha256:0000000000000000000000000000000000000000000000000000000000000008",
+      "chartVersion": "0.30.1",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "name": "temporal",
+      "kind": "helm-oci",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000009",
+      "reference": "registry.example.com/nvke/charts/temporal@sha256:0000000000000000000000000000000000000000000000000000000000000009",
+      "chartVersion": "0.74.0",
+      "helm": {
+        "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    }
+  ]
+}
