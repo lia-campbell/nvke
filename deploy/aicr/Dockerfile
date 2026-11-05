@@ -7,6 +7,6 @@
 # No RUN: a build with no RUN step needs no emulation to target another
 # architecture.
 FROM scratch
-COPY registry.yaml /aicr/registry.yaml
+COPY registry.yaml nvkr-bindings.yaml /aicr/
 COPY overlays/ /aicr/overlays/
 COPY components/ /aicr/components/

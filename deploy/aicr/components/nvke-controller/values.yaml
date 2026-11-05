@@ -3,16 +3,15 @@
 
 # Values for the nvke-controller chart.
 #
-# Site identity is not in this file. The generated overlay supplies it at
-# render time:
-#   image.repository and image.tag     from the artifact file
-#   profiles.image.repository and .tag from the artifact file
-#   spiffe.spire.serverAddress         the control-plane address of the site
-#   spiffe.trustDomain                 from the site spec; must equal the
-#                                      SPIRE server's trust domain
-#   nvkeOIDCAuth.discoveryURL          https://<site address>:30443/.well-known/openid-configuration
+# Images and site identity are not in this file.
+#   image.repository and .digest           deploy/aicr-resolve.sh, from the release
+#   profiles.image.repository and .digest  deploy/aicr-resolve.sh, from the release
+#   spiffe.spire.serverAddress             --set at bundle time; the site's address
+#   spiffe.trustDomain                     --set at bundle time; must equal the
+#                                          SPIRE server's trust domain
+#   nvkeOIDCAuth.discoveryURL              https://<site address>:30443/.well-known/openid-configuration
 #
-# No credential is in this file. The command creates the nvke-database and
+# No credential is in this file. The operator creates the nvke-database and
 # dgxc-tenant-credentials Secrets and the chart reads them by name.
 
 # The chart pins nameOverride (the pod name label) and serviceAccount.name
@@ -28,13 +27,12 @@ serviceAccount:
 nvkeSystemNamespace:
   create: false
 
-# The node stages its images before the install, so an image resolves from
-# containerd without a pull secret. Do not re-pull it.
+# The image is pinned by digest, so a cached copy is the same image.
 image:
   pullPolicy: IfNotPresent
 
 # Empty. A site that pulls the controller from a registry adds its own Secret
-# in nvke-controller through the generated overlay.
+# in nvke-controller and names it here.
 imagePullSecrets: []
 
 # Named Secret, not a chart-built connection string. With dbSecretName set the
@@ -170,7 +168,7 @@ nodeAgent:
 # Fleet profiles are a separate content image. An init container copies them
 # into /profiles. Without it /api/releases returns 500 and nothing can be
 # provisioned. The chart refuses to render with enabled=true and no tag or
-# digest, so the generated overlay must supply them.
+# digest, so the resolve must supply them.
 profiles:
   path: /profiles
   image:

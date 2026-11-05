@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Binds NVKR release outputs to this catalog. deploy/aicr-resolve.sh reads it.
+#
+# A chart binding names a registry entry. The resolve sets its repository,
+# chart, version and archive digest from the output.
+#
+# An image binding names a values file and two keys in it. The resolve writes
+# the repository and the digest of the output's reference there.
+#
+# An output the release does not carry keeps the template's value. A required
+# one fails the resolve.
+charts:
+  - output: controller-chart
+    component: nvke-controller
+    required: true
+  - output: nktp
+    component: nktp
+  - output: postgresql
+    component: postgresql
+  - output: spire-crds
+    component: spire-crds
+  - output: spire
+    component: spire
+  - output: temporal
+    component: temporal
+images:
+  - output: cwe
+    valuesFile: components/nvke-controller/values.yaml
+    repository: .image.repository
+    digest: .image.digest
+    required: true
+  - output: controller-profiles
+    valuesFile: components/nvke-controller/values.yaml
+    repository: .profiles.image.repository
+    digest: .profiles.image.digest
