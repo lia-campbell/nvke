@@ -52,7 +52,7 @@ It builds and pushes two images and six charts, then writes `release.json`.
 | `controller-profiles` | profiles image | `controller/test/fixtures/Dockerfile` |
 | `controller-chart` | controller chart | `controller/deploy/charts/controller` |
 | `nktp` | NKTP chart | `nktp/deploy/charts/nktp` |
-| `postgresql`, `spire-crds`, `spire`, `temporal` | upstream charts | mirrored at the versions in `deploy/aicr/registry.yaml` |
+| `postgresql`, `spire-crds`, `spire`, `temporal` | upstream charts | pulled from their upstream repositories at the `valuesWrittenFor` versions in `deploy/aicr/nvkr-bindings.yaml` |
 
 For each chart it records the OCI reference by digest, the chart version, and the SHA-256 of the chart archive.
 For example:
@@ -91,11 +91,15 @@ deploy/aicr-resolve.sh --release $NVKE_AICR_DEMO_DIR/release.json --out $NVKE_AI
 cat $NVKE_AICR_DEMO_DIR/catalog/release.txt
 ```
 
+The template in `deploy/aicr` names the components, their order, their values and the glue manifests.
+It names no chart repository, version or digest; those come from the release.
 `deploy/aicr/nvkr-bindings.yaml` says which output goes where.
 A chart output sets its registry entry: repository, chart, version and archive digest.
 An image output sets a repository and a digest in the controller values.
-An output the release does not carry keeps the template value.
-The resolve fails without `cwe` or `controller-chart`.
+An image output the release does not carry keeps the template value.
+The resolve fails without `cwe` or `controller-chart`, and for any chart no output resolves.
+Each chart binding also records `valuesWrittenFor`, the chart version its values file was written against.
+A release with another version resolves with a warning; `--strict` makes it fail.
 
 ## 4. Render the bundle
 

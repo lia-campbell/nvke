@@ -125,20 +125,27 @@ publish() {
   rm -rf "${WORK}/nktp-src" "${WORK}/helm"
   push_chart nktp "${charts}/nktp-${VERSION}.tgz" "${VERSION}" | jq -c . >>"${outputs}"
 
-  log "mirroring the third-party charts at the catalog's versions"
-  for component in postgresql spire-crds spire temporal; do
+  # The template names no chart source, so the upstream repositories are
+  # listed here. The version is the one the catalog's values were written for.
+  log "mirroring the third-party charts at the bindings' versions"
+  local repo chart
+  while read -r component repo; do
     export COMPONENT="${component}"
-    local repo chart
-    repo="$(yq '.components[] | select(.name == strenv(COMPONENT)) | .helm.defaultRepository' "${REPO}/deploy/aicr/registry.yaml")"
     chart="$(yq '.components[] | select(.name == strenv(COMPONENT)) | .helm.defaultChart' "${REPO}/deploy/aicr/registry.yaml")"
-    version="$(yq '.components[] | select(.name == strenv(COMPONENT)) | .helm.defaultVersion' "${REPO}/deploy/aicr/registry.yaml")"
+    version="$(yq '.charts[] | select(.component == strenv(COMPONENT)) | .valuesWrittenFor' "${REPO}/deploy/aicr/nvkr-bindings.yaml")"
+    [[ -n "${chart}" && "${chart}" != null && -n "${version}" && "${version}" != null ]] || die "no chart or valuesWrittenFor for ${component}"
     if [[ "${repo}" == oci://* ]]; then
       helm pull "${repo}/${chart}" --version "${version}" -d "${charts}" >&2
     else
       helm pull "${chart}" --repo "${repo}" --version "${version}" -d "${charts}" >&2
     fi
     push_chart "${component}" "${charts}/${chart}-${version}.tgz" "${version}" | jq -c . >>"${outputs}"
-  done
+  done <<'UPSTREAM'
+postgresql oci://registry-1.docker.io/bitnamicharts
+spire-crds https://spiffe.github.io/helm-charts-hardened/
+spire https://spiffe.github.io/helm-charts-hardened/
+temporal https://go.temporal.io/helm-charts
+UPSTREAM
 
   jq -s --arg root "sha256:$(cat "${outputs}" | shasum -a 256 | awk '{ print $1 }')" \
     '{schemaVersion: "nvkr.dev/release-description/v1", reference: ("nvkr.local/nvke/releases@" + $root), rootDigest: $root, totalOutputs: length, outputs: .}' \
