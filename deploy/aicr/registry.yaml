@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# AICR component registry for the NVKE controller stack.
+#
+# This directory is an AICR external data catalog. AICR layers it over its
+# embedded catalog with `aicr bundle --data deploy/aicr`. External entries
+# win on a name clash; cert-manager is not listed here and comes from AICR's
+# embedded registry.
+#
+# This file is a template. It names the components and their charts. It does
+# not say where a chart comes from or which version to install. Every chart
+# entry leaves defaultRepository and defaultVersion empty and carries no
+# defaultDigest. deploy/aicr-resolve.sh fills all three from an NVKR release
+# description, as nvkr-bindings.yaml says.
+#
+# The empty fields are the placeholder. aicr refuses a chart entry with no
+# repository ("has a chart name but no source repository") and a repository
+# with no version, so the unresolved template cannot render. A manifest-only
+# entry has no defaultChart and is complete as written.
+#
+# Image references live in the values files under components/.
+apiVersion: aicr.run/v1beta1
+kind: ComponentRegistry
+components:
+  - name: nktp
+    displayName: NKTP telemetry pipeline
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: nktp
+      defaultVersion: ""
+      defaultNamespace: nktp
+
+  - name: postgresql
+    displayName: PostgreSQL
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: postgresql
+      defaultVersion: ""
+      defaultNamespace: postgres
+
+  - name: spire-crds
+    displayName: SPIRE CRDs
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: spire-crds
+      defaultVersion: ""
+      defaultNamespace: spire-server
+
+  - name: temporal
+    displayName: Temporal
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: temporal
+      defaultVersion: ""
+      defaultNamespace: temporal
+
+  # Manifest only. Its release lives in default, because Helm needs the
+  # release namespace to exist before it creates anything.
+  - name: spire-namespaces
+    displayName: SPIRE namespaces
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultNamespace: default
+    manifestFiles:
+      - components/spire-namespaces/namespaces.yaml
+
+  - name: spire
+    displayName: SPIRE
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: spire
+      defaultVersion: ""
+      defaultNamespace: spire-server
+
+  - name: nvke-controller
+    displayName: NVKE controller
+    class: core
+    helm:
+      defaultRepository: ""
+      defaultChart: nvke-controller
+      defaultVersion: ""
+      defaultNamespace: nvke-controller

@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Replaces AICR's embedded base overlay. Every AICR overlay inherits from
+# "base", and the embedded one carries the GPU stack. The controller stack
+# starts from nothing.
+apiVersion: aicr.run/v1beta1
+kind: RecipeMetadata
+metadata:
+  name: base
+spec:
+  constraints:
+    - name: K8s.server.version
+      value: ">= 1.32"
+  componentRefs: []

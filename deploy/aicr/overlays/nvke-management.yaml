@@ -1,0 +1,116 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# The NVKE controller stack on an existing cluster.
+#
+#   deploy/aicr-resolve.sh --release release.json --out ./catalog
+#   aicr recipe --service nvke-management --data ./catalog -o recipe.yaml
+#   aicr bundle --recipe recipe.yaml --data ./catalog --vendor-charts --output ./bundle
+#
+# The componentRefs name no source. The registry entry is the only place a
+# chart lives, so the resolve can bind it and AICR checks its digest. The
+# template entry has no repository, version or digest; the resolve sets them
+# from the release.
+#
+# Order comes from dependencyRefs: cert-manager, nktp, postgresql,
+# spire-namespaces, spire-crds, spire, temporal, nvke-controller.
+#
+# The cluster needs a default StorageClass. PostgreSQL and SPIRE take a PVC.
+#
+# Secrets the operator creates before deploying. No values file carries a
+# credential.
+#   nvke-database            postgres, temporal, nvke-controller
+#                            keys postgres-password, database-connection-string
+#   dgxc-tenant-credentials  nvke-controller; keys user, password
+#   spire-upstream-ca        spire-server; only when SPIRE chains to an
+#                            upstream CA
+#
+# The operator also creates the nktp-cluster ConfigMap in nktp, key name, the
+# cluster name. nktp's collectors do not start without it.
+#
+# Site values the operator passes at bundle time. The values files leave them
+# unset.
+#   --set nvke-controller:spiffe.trustDomain=<trust domain>
+#   --set nvke-controller:spiffe.spire.serverAddress=<control plane address>
+#   --set spire:global.spire.trustDomain=<trust domain>
+#   --set-json 'spire:spire-server.adminIDs=["spiffe://<trust domain>/nvke-service/nvke-controller"]'
+#
+# The controller and profiles images come from the release. The resolve writes
+# them into components/nvke-controller/values.yaml.
+#
+# Not in this catalog: Cluster API, CAPNICo and NICo, the nktp-cluster
+# ConfigMap and the nvke-api-clients NetworkPolicy. The last two take a site
+# value and are rendered by nvkectl today.
+apiVersion: aicr.run/v1beta1
+kind: RecipeMetadata
+metadata:
+  name: nvke-management
+spec:
+  base: base
+  criteria:
+    service: nvke-management
+  componentRefs:
+    # From AICR's embedded registry and values. Its ServiceMonitor is off:
+    # nktp installs the monitoring CRDs after cert-manager.
+    - name: cert-manager
+      type: Helm
+      source: https://charts.jetstack.io
+      valuesFile: components/cert-manager/values.yaml
+      overrides:
+        prometheus:
+          servicemonitor:
+            enabled: false
+
+    # Installs the monitoring CRDs. Every component that creates a monitor
+    # depends on it.
+    - name: nktp
+      type: Helm
+      valuesFile: components/nktp/values.yaml
+      dependencyRefs:
+        - cert-manager
+
+    - name: postgresql
+      type: Helm
+      valuesFile: components/postgresql/values.yaml
+
+    - name: spire-namespaces
+      type: Helm
+
+    - name: spire-crds
+      type: Helm
+      dependencyRefs:
+        - spire-namespaces
+
+    # The schema jobs create the temporal databases in PostgreSQL.
+    - name: temporal
+      type: Helm
+      valuesFile: components/temporal/values.yaml
+      dependencyRefs:
+        - postgresql
+        - nktp
+
+    # The pre-manifests publish the OIDC upstream CA, the NodePort Services
+    # and the empty tpm-pubhashes ConfigMap the controller fills.
+    - name: spire
+      type: Helm
+      valuesFile: components/spire/values.yaml
+      preManifestFiles:
+        - components/spire/manifests/oidc-upstream-ca.yaml
+        - components/spire/manifests/oidc-upstream-ca-certificate.yaml
+        - components/spire/manifests/spire-server-nodeport.yaml
+        - components/spire/manifests/spire-oidc-provider-nodeport.yaml
+        - components/spire/manifests/tpm-pubhashes.yaml
+      dependencyRefs:
+        - spire-crds
+        - spire-namespaces
+        - cert-manager
+        - nktp
+
+    - name: nvke-controller
+      type: Helm
+      valuesFile: components/nvke-controller/values.yaml
+      dependencyRefs:
+        - postgresql
+        - temporal
+        - spire
+        - nktp
