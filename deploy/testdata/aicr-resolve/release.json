@@ -25,7 +25,7 @@
       "kind": "helm-oci",
       "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004",
       "reference": "registry.example.com/nvke/charts/nvke-controller@sha256:0000000000000000000000000000000000000000000000000000000000000004",
-      "chartVersion": "0.4.0",
+      "chartVersion": "0.3.1-rc.1",
       "helm": {
         "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
       }
@@ -35,7 +35,7 @@
       "kind": "helm-oci",
       "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005",
       "reference": "registry.example.com/nvke/charts/nktp@sha256:0000000000000000000000000000000000000000000000000000000000000005",
-      "chartVersion": "0.4.0",
+      "chartVersion": "0.1.1-rc.3",
       "helm": {
         "defaultDigest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
       }
