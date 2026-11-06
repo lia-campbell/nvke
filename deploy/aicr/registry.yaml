@@ -8,7 +8,17 @@
 # win on a name clash; cert-manager is not listed here and comes from AICR's
 # embedded registry.
 #
-# One entry per chart the stack installs. The version is the chart version.
+# This file is a template. It names the components and their charts. It does
+# not say where a chart comes from or which version to install. Every chart
+# entry leaves defaultRepository and defaultVersion empty and carries no
+# defaultDigest. deploy/aicr-resolve.sh fills all three from an NVKR release
+# description, as nvkr-bindings.yaml says.
+#
+# The empty fields are the placeholder. aicr refuses a chart entry with no
+# repository ("has a chart name but no source repository") and a repository
+# with no version, so the unresolved template cannot render. A manifest-only
+# entry has no defaultChart and is complete as written.
+#
 # Image references live in the values files under components/.
 apiVersion: aicr.run/v1beta1
 kind: ComponentRegistry
@@ -17,36 +27,36 @@ components:
     displayName: NKTP telemetry pipeline
     class: core
     helm:
-      defaultRepository: oci://ghcr.io/dsx-ai-factory/nvke/charts
+      defaultRepository: ""
       defaultChart: nktp
-      defaultVersion: "0.1.1-rc.3"
+      defaultVersion: ""
       defaultNamespace: nktp
 
   - name: postgresql
     displayName: PostgreSQL
     class: core
     helm:
-      defaultRepository: oci://registry-1.docker.io/bitnamicharts
+      defaultRepository: ""
       defaultChart: postgresql
-      defaultVersion: "18.5.15"
+      defaultVersion: ""
       defaultNamespace: postgres
 
   - name: spire-crds
     displayName: SPIRE CRDs
     class: core
     helm:
-      defaultRepository: https://spiffe.github.io/helm-charts-hardened/
+      defaultRepository: ""
       defaultChart: spire-crds
-      defaultVersion: "0.6.1"
+      defaultVersion: ""
       defaultNamespace: spire-server
 
   - name: temporal
     displayName: Temporal
     class: core
     helm:
-      defaultRepository: https://go.temporal.io/helm-charts
+      defaultRepository: ""
       defaultChart: temporal
-      defaultVersion: "0.74.0"
+      defaultVersion: ""
       defaultNamespace: temporal
 
   # Manifest only. Its release lives in default, because Helm needs the
@@ -64,18 +74,16 @@ components:
     displayName: SPIRE
     class: core
     helm:
-      defaultRepository: https://spiffe.github.io/helm-charts-hardened/
+      defaultRepository: ""
       defaultChart: spire
-      defaultVersion: "0.30.1"
+      defaultVersion: ""
       defaultNamespace: spire-server
 
   - name: nvke-controller
     displayName: NVKE controller
     class: core
     helm:
-      defaultRepository: oci://ghcr.io/dsx-ai-factory/nvke/charts
+      defaultRepository: ""
       defaultChart: nvke-controller
-      # The chart publish workflow tags the chart with the controller release.
-      # This pin is not verified against the registry yet.
-      defaultVersion: "0.3.1-rc.1"
+      defaultVersion: ""
       defaultNamespace: nvke-controller

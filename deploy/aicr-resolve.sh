@@ -4,12 +4,16 @@
 #
 # Resolve the AICR catalog template against an NVKR release description.
 #
-#   deploy/aicr-resolve.sh --release release.json [--catalog deploy/aicr] --out DIR
+#   deploy/aicr-resolve.sh --release release.json [--catalog deploy/aicr] [--strict] --out DIR
 #
 # Copies the template to DIR and applies nvkr-bindings.yaml. Chart outputs
 # set the registry entry's repository, chart, version and archive digest.
 # Image outputs set a repository and a digest in a values file. DIR gets a
 # release.txt that records what was bound.
+#
+# The template names no chart repository or version. A chart no output
+# resolves fails the resolve. A chart version other than the binding's
+# valuesWrittenFor is a warning, or a failure with --strict.
 #
 # The release is nvkr.dev/release-description/v1 or a hand-written file with
 # only outputs. Needs jq and yq (mikefarah, v4).
@@ -19,16 +23,18 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CATALOG="${REPO}/deploy/aicr"
 RELEASE=""
 OUT=""
+STRICT=false
 
 die() { printf 'aicr-resolve: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'aicr-resolve: warning: %s\n' "$*" >&2; }
-usage() { sed -n '5,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '5,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --release) RELEASE="${2:?--release needs a file}"; shift 2 ;;
     --catalog) CATALOG="${2:?--catalog needs a directory}"; shift 2 ;;
     --out) OUT="${2:?--out needs a directory}"; shift 2 ;;
+    --strict) STRICT=true; shift ;;
     -h|--help) usage ;;
     *) printf 'aicr-resolve: unknown argument %s\n' "$1" >&2; usage 1 ;;
   esac
@@ -58,11 +64,12 @@ VALUES_PATH='^(\.[A-Za-z0-9_-]+)+$'
 # output prints the named output as JSON, or nothing.
 output() { jq -c --arg n "$1" '[.outputs[] | select(.name == $n)] | first // empty' "${RELEASE}"; }
 
-# missing handles an output the release does not carry.
+# missing handles an output the release does not carry. $3 says what that
+# leaves behind.
 missing() {
-  local name="$1" required="$2"
+  local name="$1" required="$2" effect="$3"
   [[ "${required}" != true ]] || die "the release has no ${name} output, which is required"
-  warn "the release has no ${name} output; the template value stays"
+  warn "the release has no ${name} output; ${effect}"
 }
 
 # checked_output prints the output after checking its kind and reference.
@@ -76,10 +83,10 @@ checked_output() {
   printf '%s\n' "${out}"
 }
 
-while IFS=$'\t' read -r name component required; do
+while IFS=$'\t' read -r name component written required; do
   out="$(checked_output "${name}" helm-oci)"
   if [[ -z "${out}" ]]; then
-    missing "${name}" "${required}"
+    missing "${name}" "${required}" "${component} stays unresolved"
     continue
   fi
   COMPONENT="${component}" yq -e '.components[] | select(.name == strenv(COMPONENT))' "${REGISTRY}" >/dev/null 2>&1 ||
@@ -95,6 +102,11 @@ while IFS=$'\t' read -r name component required; do
   path="${ref%@*}"
   version="$(jq -r '.chartVersion // ""' <<<"${out}")"
   [[ -n "${version}" ]] || die "output ${name} has no chartVersion"
+  if [[ -n "${written}" && "${written}" != "${version}" ]]; then
+    msg="output ${name} is chart version ${version}; the ${component} values were written for ${written}"
+    [[ "${STRICT}" != true ]] || die "${msg}"
+    warn "${msg}"
+  fi
   digest="$(jq -r '.helm.defaultDigest // ""' <<<"${out}")"
   export COMPONENT="${component}" HELM_REPO="oci://${path%/*}" HELM_CHART="${path##*/}" HELM_VERSION="${version}" HELM_DIGEST="${digest}"
   yq -i '(.components[] | select(.name == strenv(COMPONENT)) | .helm) |=
@@ -107,14 +119,20 @@ while IFS=$'\t' read -r name component required; do
     warn "output ${name} has no helm.defaultDigest; aicr bundle --vendor-charts cannot check ${component}"
   fi
   RECORD+="$(printf 'chart\t%s\t%s\t%s:%s\t%s' "${name}" "${component}" "${HELM_REPO}/${HELM_CHART}" "${version}" "${digest:-unchecked}")"$'\n'
-done < <(yq -o=json '.charts // []' "${BINDINGS}" | jq -r '.[] | [.output, .component, (.required // false)] | @tsv')
+done < <(yq -o=json '.charts // []' "${BINDINGS}" | jq -r '.[] | [.output, .component, (.valuesWrittenFor // ""), (.required // false)] | @tsv')
+
+# A chart entry has a defaultChart. After binding it must also have a
+# repository and a version; the template carries neither.
+unresolved="$(yq -r '.components[] | select((.helm.defaultChart // "") != "")
+  | select((.helm.defaultRepository // "") == "" or (.helm.defaultVersion // "") == "") | .name' "${REGISTRY}" | paste -sd ' ' -)"
+[[ -z "${unresolved}" ]] || die "no release output resolves the chart of: ${unresolved}; the template has no repository or version for it"
 
 while IFS=$'\t' read -r name values repo_key digest_key required; do
   [[ "${repo_key}" =~ ${VALUES_PATH} && "${digest_key}" =~ ${VALUES_PATH} ]] || die "binding ${name}: bad values path"
   [[ -f "${OUT}/${values}" ]] || die "binding ${name}: no values file ${values}"
   out="$(checked_output "${name}" oci)"
   if [[ -z "${out}" ]]; then
-    missing "${name}" "${required}"
+    missing "${name}" "${required}" "the template value stays"
     continue
   fi
   ref="$(jq -r '.reference' <<<"${out}")"

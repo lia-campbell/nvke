@@ -8,7 +8,9 @@
 #   aicr bundle --recipe recipe.yaml --data ./catalog --vendor-charts --output ./bundle
 #
 # The componentRefs name no source. The registry entry is the only place a
-# chart lives, so the resolve can bind it and AICR checks its digest.
+# chart lives, so the resolve can bind it and AICR checks its digest. The
+# template entry has no repository, version or digest; the resolve sets them
+# from the release.
 #
 # Order comes from dependencyRefs: cert-manager, nktp, postgresql,
 # spire-namespaces, spire-crds, spire, temporal, nvke-controller.
