@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Example artifacts file. It lists where the charts and the NVKE controller
+# image are. The helmfile reads every entry below and fails without one.
+artifacts:
+  charts:
+    controller-chart:
+      ref: oci://registry.example.com/nvke/charts/nvke-controller
+      version: "1.0.0"
+      archiveDigest: sha256:0000000000000000000000000000000000000000000000000000000000000001
+    postgresql-chart:
+      ref: oci://registry.example.com/nvke/charts/postgresql
+      version: "0.1.1"
+      archiveDigest: sha256:0000000000000000000000000000000000000000000000000000000000000002
+    temporal-chart:
+      ref: oci://registry.example.com/nvke/charts/temporal
+      version: "0.74.0"
+      archiveDigest: sha256:0000000000000000000000000000000000000000000000000000000000000003
+    spire-crds-chart:
+      ref: oci://registry.example.com/nvke/charts/spire-crds
+      version: "0.6.1"
+      archiveDigest: sha256:0000000000000000000000000000000000000000000000000000000000000004
+    spire-chart:
+      ref: oci://registry.example.com/nvke/charts/spire
+      version: "0.30.1"
+      archiveDigest: sha256:0000000000000000000000000000000000000000000000000000000000000005
+  images:
+    # The NVKE controller image.
+    cwe:
+      repository: registry.example.com/nvke/images/nvke-controller
+      digest: sha256:0000000000000000000000000000000000000000000000000000000000000006
+      tag: "1.0.0"

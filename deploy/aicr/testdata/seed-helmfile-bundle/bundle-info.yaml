@@ -1,0 +1,50 @@
+apiVersion: aicr.run/v1
+build:
+  deployer: helmfile
+  recipe:
+    digest: sha256:d2fdba45ccecf08ec6c8339bdaf07e2eed75f87e2eb56e8544c5242881070625
+    path: recipe.yaml
+    version: 1.3.0
+  settings:
+    attested: false
+    checksums: true
+    nodeScheduling:
+      accelerated:
+        tolerations:
+          - operator: Exists
+      system:
+        tolerations:
+          - operator: Exists
+    readinessHooks: false
+    serial: false
+    vendorCharts: false
+kind: BundleInfo
+layout:
+  entrypoint: helmfile.yaml
+  releases:
+    - component: postgres
+      name: postgres
+      namespace: postgres
+      path: 001-postgres
+    - component: spire-crds
+      name: spire-crds
+      namespace: spire-server
+      path: 002-spire-crds
+    - component: spire
+      name: spire
+      namespace: spire-server
+      path: 003-spire
+    - component: temporal
+      name: temporal
+      namespace: temporal
+      path: 004-temporal
+    - component: nvke-controller
+      name: nvke-controller
+      namespace: nvke-controller
+      path: 005-nvke-controller
+    - component: nvke-controller
+      name: nvke-controller-post
+      namespace: nvke-controller
+      path: 006-nvke-controller-post
+metadata:
+  version: 1.3.0

@@ -1,0 +1,40 @@
+apiVersion: aicr.run/v1beta1
+kind: ArtifactInventory
+metadata:
+  name: nvke-seed-local
+artifacts:
+  - name: controller-chart
+    type: chart
+    reference: oci://localhost:5001/nvke/charts/nvke-controller
+    version: "0.0.0-local"
+    manifestDigest: sha256:575d33d22a93296497063790338a007b2f52846bff844292cf4fcc826ec8ff3f
+    archiveDigest: sha256:1ab08150fde4f0e9d01f8423e062f6e5ea16e40bcf7211269fb8505e3e0d92c7
+  - name: postgresql-chart
+    type: chart
+    reference: oci://localhost:5001/nvke/charts/postgresql
+    version: "0.0.0-local"
+    manifestDigest: sha256:ca2f52fc6aff3321465040242ac75f340a018d1ec879858b895fc0e6f54d5a42
+    archiveDigest: sha256:386026193e27a95732bd4a514c91b69e3d7e8b2e7f2bc4d7a2a5500e7631b0a5
+  - name: temporal-chart
+    type: chart
+    reference: oci://localhost:5001/nvke/charts/temporal
+    version: "0.74.0"
+    manifestDigest: sha256:53525831486003e8c70380396af6c4a86383ae24334f555dcf264757401b386d
+    archiveDigest: sha256:14a8efe1cc92c91befac151db91f20f9a13962788e9d710c86655add6d966d37
+  - name: spire-crds-chart
+    type: chart
+    reference: oci://localhost:5001/nvke/charts/spire-crds
+    version: "0.6.1"
+    manifestDigest: sha256:d1e02e44798664f846dfad0b5937dfedf5e76665f230dca5dda089021cf916a1
+    archiveDigest: sha256:ce982e63fc375e392b014fc99e621a55442ab886052413e9bb052f72d66580a8
+  - name: spire-chart
+    type: chart
+    reference: oci://localhost:5001/nvke/charts/spire
+    version: "0.30.1"
+    manifestDigest: sha256:4324ed10af96761711aa1850d77387be56e471ce3b53ee080a111b155f0ddd14
+    archiveDigest: sha256:7c32126bb1909076cdf9fd0419dbf9e5b012f152bb09a96a4259917d70581fac
+  - name: cwe
+    type: image
+    reference: oci://localhost:5001/nvke/images/nke-controller
+    version: "0.0.0-local"
+    manifestDigest: sha256:8e3e7728d94d2e36d8b9fee6429bf26cee0e7ab02cb9c2eb4661445d03d7e634

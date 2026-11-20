@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values for the upstream SPIRE chart on the seed cluster.
+# The chart installs the server, agent, CSI driver and controller manager.
+#
+# The cluster name, trust domain and admin ID are install-time values.
+# See config/seed.yaml. The values here are the seed defaults.
+# The admin ID carries the trust domain, so the two change together.
+global:
+  spire:
+    clusterName: nvkectl-bootstrap
+    trustDomain: nvkectl-bootstrap.nke.local
+  installAndUpgradeHooks:
+    enabled: false
+  deleteHooks:
+    enabled: false
+
+spire-agent:
+  # The agent does not derive this port from the server Service.
+  server:
+    port: 8081
+  workloadAttestors:
+    k8s:
+      enabled: true
+      disableContainerSelectors: true
+
+spire-server:
+  # The identity of the controller, which manages SPIRE entries.
+  adminIDs:
+    - spiffe://nvkectl-bootstrap.nke.local/nvke-service/nvke-controller
+  # The controller's default SPIRE address uses this port.
+  service:
+    port: 8081
+  controllerManager:
+    # The controller stamps this class on the entries it writes.
+    className: spire-mgmt-spire
+    # The webhook is not up when the chart applies its ClusterSPIFFEIDs.
+    # Ignore lets the first install pass without hook Jobs.
+    validatingWebhookConfiguration:
+      failurePolicy: Ignore
+    identities:
+      clusterSPIFFEIDs:
+        default:
+          namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: NotIn
+                values:
+                  - nvke-controller
+        nvke-service:
+          enabled: true
+          spiffeIDTemplate: "spiffe://{{ .TrustDomain }}/nvke-service/{{ .PodSpec.ServiceAccountName }}"
+          namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - nvke-controller
+          fallback: false
+
+# Workload identity needs no OIDC provider.
+spiffe-oidc-discovery-provider:
+  enabled: false

@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values for the in-repo PostgreSQL chart on the seed cluster.
+# The init script creates the database the controller connects to.
+# The key stays init-cwe.sql, so it replaces the chart's default script.
+#
+# auth.password is an install-time value. See config/seed.yaml.
+initdb:
+  scripts:
+    init-cwe.sql: |
+      CREATE DATABASE "nvke-controller";

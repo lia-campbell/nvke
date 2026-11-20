@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Publishes the SPIRE server to hosts outside the cluster.
+# The chart's Service template has no nodePort field, so this is a second
+# Service that selects the same pods. Nodes are configured with port 30081.
+apiVersion: v1
+kind: Service
+metadata:
+  name: spire-server-external
+  labels:
+    app.kubernetes.io/name: server
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: server
+    app.kubernetes.io/instance: spire
+  ports:
+    - name: grpc
+      protocol: TCP
+      targetPort: grpc
+      port: 8081
+      nodePort: 30081

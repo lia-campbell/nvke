@@ -1,0 +1,24 @@
+repositories:
+  - name: localhost-5001-nvke-charts
+    url: localhost:5001/nvke/charts
+    oci: true
+helmDefaults:
+  wait: true
+  timeout: 600
+  createNamespace: true
+releases:
+  - name: nvke-controller
+    namespace: nvke-controller
+    chart: localhost-5001-nvke-charts/nvke-controller
+    version: 0.0.0-local
+    values:
+      - ./005-nvke-controller/values.yaml
+      - ./005-nvke-controller/cluster-values.yaml
+  - name: nvke-controller-post
+    namespace: nvke-controller
+    chart: ./006-nvke-controller-post
+    values:
+      - ./006-nvke-controller-post/values.yaml
+      - ./006-nvke-controller-post/cluster-values.yaml
+    needs:
+      - nvke-controller

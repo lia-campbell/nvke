@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# The seed stack: what runs on the temporary bootstrap cluster.
+# It has no Cluster API provider, no Cluster API core and no cert-manager.
+#
+# AICR selects an overlay by five fixed criteria keys.
+# The stack variant maps to intent, so `aicr recipe --intent seed` finds it.
+# A site overlay can use "intent: site".
+# The Makefile passes this file with --recipe, which needs no criteria.
+apiVersion: aicr.run/v1beta1
+kind: RecipeMetadata
+metadata:
+  name: seed
+spec:
+  base: base
+  criteria:
+    intent: seed
+  componentRefs:
+    - name: postgres
+      type: Helm
+      valuesFile: components/postgres/values.yaml
+
+    # The schema jobs create the Temporal databases in PostgreSQL.
+    - name: temporal
+      type: Helm
+      valuesFile: components/temporal/values.yaml
+      dependencyRefs:
+        - postgres
+
+    # A chart cannot depend on its own CRDs, so they are a separate release.
+    - name: spire-crds
+      type: Helm
+
+    - name: spire
+      type: Helm
+      valuesFile: components/spire/values.yaml
+      dependencyRefs:
+        - spire-crds
+
+    # The manifest publishes the controller API on a NodePort.
+    - name: nvke-controller
+      type: Helm
+      valuesFile: components/nvke-controller/values.yaml
+      manifestFiles:
+        - components/nvke-controller/manifests/controller-nodeport.yaml
+      dependencyRefs:
+        - postgres
+        - temporal
+        - spire
