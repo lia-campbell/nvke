@@ -1,0 +1,131 @@
+apiVersion: aicr.run/v1beta2
+componentRefs:
+  - chart: nvke-controller
+    dependencyRefs:
+      - postgres
+      - temporal
+      - spire
+    manifestFiles:
+      - components/nvke-controller/manifests/controller-nodeport.yaml
+    name: nvke-controller
+    namespace: nvke-controller
+    source: oci://localhost:5001/nvke/charts
+    type: Helm
+    valuesFile: components/nvke-controller/values.yaml
+    version: 0.0.0-local
+  - chart: postgresql
+    name: postgres
+    namespace: postgres
+    source: oci://localhost:5001/nvke/charts
+    type: Helm
+    valuesFile: components/postgres/values.yaml
+    version: 0.0.0-local
+  - chart: spire
+    dependencyRefs:
+      - spire-crds
+    name: spire
+    namespace: spire-server
+    source: oci://localhost:5001/nvke/charts
+    type: Helm
+    valuesFile: components/spire/values.yaml
+    version: 0.30.1
+  - chart: spire-crds
+    name: spire-crds
+    namespace: spire-server
+    source: oci://localhost:5001/nvke/charts
+    type: Helm
+    version: 0.6.1
+  - chart: temporal
+    dependencyRefs:
+      - postgres
+    name: temporal
+    namespace: temporal
+    source: oci://localhost:5001/nvke/charts
+    type: Helm
+    valuesFile: components/temporal/values.yaml
+    version: 0.74.0
+criteria:
+  accelerator: any
+  intent: seed
+  os: any
+  platform: any
+  service: any
+deploymentOrder:
+  - postgres
+  - spire-crds
+  - spire
+  - temporal
+  - nvke-controller
+kind: RecipeResult
+metadata:
+  appliedOverlays:
+    - base
+    - seed
+  artifacts:
+    allowCatalogPins: []
+    applied:
+      - artifact:
+          archiveDigest: sha256:1ab08150fde4f0e9d01f8423e062f6e5ea16e40bcf7211269fb8505e3e0d92c7
+          manifestDigest: sha256:575d33d22a93296497063790338a007b2f52846bff844292cf4fcc826ec8ff3f
+          name: controller-chart
+          reference: oci://localhost:5001/nvke/charts/nvke-controller
+          type: chart
+          version: 0.0.0-local
+        chart:
+          component: nvke-controller
+      - artifact:
+          manifestDigest: sha256:8e3e7728d94d2e36d8b9fee6429bf26cee0e7ab02cb9c2eb4661445d03d7e634
+          name: cwe
+          reference: oci://localhost:5001/nvke/images/nke-controller
+          type: image
+          version: 0.0.0-local
+        image:
+          targets:
+            - component: nvke-controller
+              valuesFile: components/nvke-controller/values.yaml
+              write:
+                clearTag: /image/tag
+                digest: /image/digest
+                repository: /image/repository
+      - artifact:
+          archiveDigest: sha256:386026193e27a95732bd4a514c91b69e3d7e8b2e7f2bc4d7a2a5500e7631b0a5
+          manifestDigest: sha256:ca2f52fc6aff3321465040242ac75f340a018d1ec879858b895fc0e6f54d5a42
+          name: postgresql-chart
+          reference: oci://localhost:5001/nvke/charts/postgresql
+          type: chart
+          version: 0.0.0-local
+        chart:
+          component: postgres
+      - artifact:
+          archiveDigest: sha256:7c32126bb1909076cdf9fd0419dbf9e5b012f152bb09a96a4259917d70581fac
+          manifestDigest: sha256:4324ed10af96761711aa1850d77387be56e471ce3b53ee080a111b155f0ddd14
+          name: spire-chart
+          reference: oci://localhost:5001/nvke/charts/spire
+          type: chart
+          version: 0.30.1
+        chart:
+          component: spire
+      - artifact:
+          archiveDigest: sha256:ce982e63fc375e392b014fc99e621a55442ab886052413e9bb052f72d66580a8
+          manifestDigest: sha256:d1e02e44798664f846dfad0b5937dfedf5e76665f230dca5dda089021cf916a1
+          name: spire-crds-chart
+          reference: oci://localhost:5001/nvke/charts/spire-crds
+          type: chart
+          version: 0.6.1
+        chart:
+          component: spire-crds
+      - artifact:
+          archiveDigest: sha256:14a8efe1cc92c91befac151db91f20f9a13962788e9d710c86655add6d966d37
+          manifestDigest: sha256:53525831486003e8c70380396af6c4a86383ae24334f555dcf264757401b386d
+          name: temporal-chart
+          reference: oci://localhost:5001/nvke/charts/temporal
+          type: chart
+          version: 0.74.0
+        chart:
+          component: temporal
+    baseCatalogDigest: sha256:1e6b3c355133e79a804a45ea71dd5acc6d0d7ff3e62d8355df9cad06fd634840
+    bindingsDigest: sha256:7845092e83fb40dc41e348206f452540d3a6e5ebb170d0bf35f7bc9b21e5c570
+    ignored: []
+    inventoryDigest: sha256:b4a4cf90ee782e2dab742b8d37bb1d08ffd87cf8e1c9d7469ab686a8ddb68909
+    verification: metadata-only
+  version: 1.3.0

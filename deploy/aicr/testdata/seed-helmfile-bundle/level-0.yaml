@@ -1,0 +1,22 @@
+repositories:
+  - name: localhost-5001-nvke-charts
+    url: localhost:5001/nvke/charts
+    oci: true
+helmDefaults:
+  wait: true
+  timeout: 600
+  createNamespace: true
+releases:
+  - name: postgres
+    namespace: postgres
+    chart: localhost-5001-nvke-charts/postgresql
+    version: 0.0.0-local
+    values:
+      - ./001-postgres/values.yaml
+      - ./001-postgres/cluster-values.yaml
+  - name: spire-crds
+    namespace: spire-server
+    chart: localhost-5001-nvke-charts/spire-crds
+    version: 0.6.1
+    values:
+      - ./002-spire-crds/values.yaml

@@ -1,0 +1,22 @@
+repositories:
+  - name: localhost-5001-nvke-charts
+    url: localhost:5001/nvke/charts
+    oci: true
+helmDefaults:
+  wait: true
+  timeout: 600
+  createNamespace: true
+releases:
+  - name: spire
+    namespace: spire-server
+    chart: localhost-5001-nvke-charts/spire
+    version: 0.30.1
+    values:
+      - ./003-spire/values.yaml
+      - ./003-spire/cluster-values.yaml
+  - name: temporal
+    namespace: temporal
+    chart: localhost-5001-nvke-charts/temporal
+    version: 0.74.0
+    values:
+      - ./004-temporal/values.yaml

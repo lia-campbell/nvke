@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# The components of the NVKE controller stack.
+# An entry names no registry, version or digest.
+# The artifact inventory supplies them at render time.
+# The component name is the Helm release name.
+apiVersion: aicr.run/v1beta1
+kind: ComponentRegistry
+components:
+  - name: postgres
+    displayName: PostgreSQL
+    class: core
+    helm:
+      defaultNamespace: postgres
+
+  - name: temporal
+    displayName: Temporal
+    class: core
+    helm:
+      defaultNamespace: temporal
+
+  - name: spire-crds
+    displayName: SPIRE CRDs
+    class: core
+    helm:
+      defaultNamespace: spire-server
+
+  - name: spire
+    displayName: SPIRE
+    class: core
+    helm:
+      defaultNamespace: spire-server
+
+  - name: nvke-controller
+    displayName: NVKE controller
+    class: core
+    helm:
+      defaultNamespace: nvke-controller
