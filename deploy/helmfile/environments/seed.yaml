@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values of the seed variant. They do not change from site to site.
+
+# One switch per component. A release installs when its switch is true.
+postgres:
+  enabled: true
+temporal:
+  enabled: true
+controller:
+  enabled: true
+  # The controller API port. It is also the NodePort the host reaches.
+  port: 30080
+  # The provider payload the controller accepts on CreateCluster.
+  supportedInfraProviders: infra
+  nicoControllers: false
+  allowControlPlaneWithoutVIP: false
+spire:
+  # False installs no SPIRE and turns SPIFFE off in the controller.
+  enabled: true
+  # The sha256 of the TPM attestor server plugin, by node architecture.
+  # A wrong value crash-loops spire-server.
+  tpmPluginChecksums:
+    amd64: 46d0caad8c25a027dd11c93e18b58a8bc6fbd9f1fe2e36fa2a0dd440986de4dc
+    arm64: b69d0153c8241383f24da138bc85429a620d9f962a2f10abb314aa0e39046d16
+
+registry:
+  # True pulls charts over plain HTTP.
+  plainHttp: false

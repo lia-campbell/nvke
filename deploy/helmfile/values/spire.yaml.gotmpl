@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values for the spire release. Third-party images stay at chart defaults.
+{{- $trustDomain := .Values | get "site.trustDomain" (printf "%s.nke.local" .Values.site.clusterName) }}
+{{- $thumbprints := .Values | get "site.tpm.ekThumbprints" list }}
+
+global:
+  installAndUpgradeHooks:
+    enabled: false
+  deleteHooks:
+    enabled: false
+  spire:
+    clusterName: {{ .Values.site.clusterName | quote }}
+    trustDomain: {{ $trustDomain | quote }}
+
+spire-agent:
+  # The agent port does not follow the server Service. Keep the two equal.
+  server:
+    port: 8081
+  workloadAttestors:
+    k8s:
+      # Both are chart defaults. They are restated so a changed default shows.
+      enabled: true
+      disableContainerSelectors: true
+
+spire-server:
+  # The controller's identity may call the server's admin API.
+  adminIDs:
+    - spiffe://{{ $trustDomain }}/nvke-service/nvke-controller
+  service:
+    port: 8081
+  {{- if $thumbprints }}
+  nodeAttestor:
+    tpmDirect:
+      enabled: true
+      checksum: {{ .Values.spire.tpmPluginChecksums | get .Values.site.tpm.nodeArch | quote }}
+      hashes:
+        {{- toYaml $thumbprints | nindent 8 }}
+  {{- end }}
+  controllerManager:
+    # The controller chart's spiffe.spire.className must match.
+    className: spire-mgmt-spire
+    # The chart applies ClusterSPIFFEIDs before its webhook listens.
+    # Ignore lets a fresh install pass. The webhook validates once it is up.
+    validatingWebhookConfiguration:
+      failurePolicy: Ignore
+    identities:
+      clusterSPIFFEIDs:
+        default:
+          namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: NotIn
+                values:
+                  - nvke-controller
+        nvke-service:
+          enabled: true
+          # The braces are SPIRE's template, escaped for Helmfile.
+          spiffeIDTemplate: {{ "spiffe://{{ .TrustDomain }}/nvke-service/{{ .PodSpec.ServiceAccountName }}" | quote }}
+          namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - nvke-controller
+          fallback: false
+
+# Workload identity needs no OIDC provider. Off also avoids cert-manager.
+spiffe-oidc-discovery-provider:
+  enabled: false

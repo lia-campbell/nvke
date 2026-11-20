@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values for the postgres release.
+
+# The password is a credential, so it is not a state value. The chart takes
+# it only as a value, so it comes from the environment.
+auth:
+  password: {{ requiredEnv "NVKE_POSTGRES_PASSWORD" | quote }}
+
+# The key stays init-cwe.sql so it replaces the chart's default script.
+# The database name matches appDb.dbName in the controller values.
+initdb:
+  scripts:
+    init-cwe.sql: |
+      CREATE DATABASE "nvke-controller";

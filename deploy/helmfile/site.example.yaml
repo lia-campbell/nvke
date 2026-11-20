@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Example site file. It holds the settings that differ from site to site.
+# Credentials are not here. Set NVKE_POSTGRES_PASSWORD in the environment.
+site:
+  # Required. The name of the cluster the stack runs on. SPIRE is told this name.
+  clusterName: nvkectl-bootstrap
+
+  # Required. The port the controller dials the node agent on.
+  nodeAgentPort: "15005"
+
+  # Optional. The SPIFFE trust domain. The default is <clusterName>.nke.local.
+  # trustDomain: site-a.example.com
+
+  # Optional. The hosts allowed to attest to SPIRE by TPM.
+  # tpm:
+  #   # SHA-256 endorsement key thumbprints, one per host.
+  #   ekThumbprints:
+  #     - 0f3a8c1d5e7b9a2c4d6e8f0a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c
+  #   # Required with ekThumbprints: amd64 or arm64.
+  #   nodeArch: amd64
+
+  # Optional. OIDC providers the site cluster's API server trusts.
+  # oidcProviders:
+  #   - name: example
+  #     issuerURL: https://issuer.example.com
+  #     audiences: [nvke]
+  #     usernameClaim: email
+  #     usernamePrefix: "oidc:"
+  #     caBundle: ""

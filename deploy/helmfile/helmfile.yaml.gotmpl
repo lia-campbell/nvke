@@ -1,0 +1,111 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# The NVKE seed stack as one Helmfile: PostgreSQL, Temporal, SPIRE and the
+# NVKE controller. It installs no Cluster API component.
+#
+# This file names no registry, chart version or digest. Pass two state values
+# files:
+#   --state-values-file <artifacts>  chart and image locations (artifacts.example.yaml)
+#   --state-values-file <site>       site settings (site.example.yaml)
+# The Makefile in this directory wraps the commands.
+
+environments:
+  # The stack on the temporary cluster `nvkectl bootstrap site` creates.
+  seed:
+    values:
+      - environments/seed.yaml
+  # A `site` environment goes here, with its own values file.
+
+---
+{{- /* Stop when a required artifact or site value is missing or empty. */ -}}
+{{- $charts := .Values | get "artifacts.charts" dict -}}
+{{- range $name := list "postgresql-chart" "temporal-chart" "spire-crds-chart" "spire-chart" "controller-chart" -}}
+{{- range $field := list "ref" "version" "archiveDigest" -}}
+{{- $_ := required (printf "artifacts.charts.%s.%s is not set; pass the artifacts file with --state-values-file" $name $field) ($charts | get (printf "%s.%s" $name $field) "") -}}
+{{- end -}}
+{{- end -}}
+{{- range $field := list "repository" "digest" -}}
+{{- $_ := required (printf "artifacts.images.cwe.%s is not set; pass the artifacts file with --state-values-file" $field) ($.Values | get (printf "artifacts.images.cwe.%s" $field) "") -}}
+{{- end -}}
+{{- range $field := list "clusterName" "nodeAgentPort" -}}
+{{- $_ := required (printf "site.%s is not set; pass the site file with --state-values-file" $field) ($.Values | get (printf "site.%s" $field) "") -}}
+{{- end -}}
+{{- $thumbprints := .Values | get "site.tpm.ekThumbprints" list -}}
+{{- if $thumbprints -}}
+{{- $arch := required "site.tpm.nodeArch is not set; it is required with site.tpm.ekThumbprints" (.Values | get "site.tpm.nodeArch" "") -}}
+{{- $_ := required (printf "site.tpm.nodeArch %q has no TPM plugin checksum in the environment values" $arch) (.Values.spire.tpmPluginChecksums | get $arch "") -}}
+{{- end }}
+
+{{- /* The chart, its version and a hook that checks the archive digest. */ -}}
+{{- define "chart" }}
+    chart: {{ .chart.ref }}
+    version: {{ .chart.version | quote }}
+    hooks:
+      - events: ["prepare"]
+        showlogs: true
+        command: hooks/verify-chart-archive.sh
+        args: [{{ .chart.ref | quote }}, {{ .chart.version | quote }}, {{ .chart.archiveDigest | quote }}, {{ .plainHttp | quote }}]
+{{- end }}
+
+helmDefaults:
+  wait: true
+  timeout: 300
+  createNamespace: true
+  # Set by the Makefile's PLAIN_HTTP for a registry without TLS.
+  plainHttp: {{ .Values.registry.plainHttp }}
+
+releases:
+  - name: postgres
+    namespace: postgres
+    {{- template "chart" (dict "chart" (index $charts "postgresql-chart") "plainHttp" $.Values.registry.plainHttp) }}
+    condition: postgres.enabled
+    values:
+      - values/postgres.yaml.gotmpl
+
+  - name: temporal
+    namespace: temporal
+    {{- template "chart" (dict "chart" (index $charts "temporal-chart") "plainHttp" $.Values.registry.plainHttp) }}
+    condition: temporal.enabled
+    needs:
+      - postgres/postgres
+    values:
+      - values/temporal.yaml.gotmpl
+
+  - name: spire-crds
+    namespace: spire-server
+    {{- template "chart" (dict "chart" (index $charts "spire-crds-chart") "plainHttp" $.Values.registry.plainHttp) }}
+    condition: spire.enabled
+
+  - name: spire
+    namespace: spire-server
+    {{- template "chart" (dict "chart" (index $charts "spire-chart") "plainHttp" $.Values.registry.plainHttp) }}
+    condition: spire.enabled
+    needs:
+      - spire-server/spire-crds
+    values:
+      - values/spire.yaml.gotmpl
+
+  # A NodePort for hosts outside the cluster. Only TPM attestation needs it.
+  - name: spire-server-external
+    namespace: spire-server
+    chart: manifests/spire-server-external
+    installed: {{ and .Values.spire.enabled (not (empty $thumbprints)) }}
+    needs:
+      - spire-server/spire
+
+  # Infrastructure provider releases go here, each with
+  # `condition: <name>.enabled` and listed in the controller's `needs`.
+
+  - name: nvke-controller
+    namespace: nvke-controller
+    {{- template "chart" (dict "chart" (index $charts "controller-chart") "plainHttp" $.Values.registry.plainHttp) }}
+    condition: controller.enabled
+    needs:
+      - postgres/postgres
+      - temporal/temporal
+      {{- if .Values.spire.enabled }}
+      - spire-server/spire
+      {{- end }}
+    values:
+      - values/nvke-controller.yaml.gotmpl

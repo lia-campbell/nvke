@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Values for the nvke-controller release.
+{{- $cwe := .Values.artifacts.images.cwe }}
+{{- $trustDomain := .Values | get "site.trustDomain" (printf "%s.nke.local" .Values.site.clusterName) }}
+{{- $oidcProviders := .Values | get "site.oidcProviders" list }}
+
+# The NVKE controller image, from artifacts.images.cwe.
+image:
+  repository: {{ $cwe.repository | quote }}
+  tag: {{ $cwe | get "tag" "" | quote }}
+  digest: {{ $cwe.digest | quote }}
+  pullPolicy: IfNotPresent
+
+# The chart pins the service account name, so all four are set.
+fullnameOverride: nvke-controller
+nameOverride: nvke-controller
+namespaceOverride: nvke-controller
+serviceAccount:
+  name: nvke-controller
+
+# The chart adds a second Service of type NodePort when nodePort is set.
+service:
+  port: {{ .Values.controller.port }}
+  nodePort: {{ .Values.controller.port }}
+
+metrics:
+  networkPolicy:
+    enabled: false
+serviceMonitor:
+  enabled: false
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 20
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+appDb:
+  url: postgres-postgresql.postgres.svc.cluster.local:5432
+  dbName: nvke-controller
+  postgresUser: postgres
+  postgresPassword: {{ requiredEnv "NVKE_POSTGRES_PASSWORD" | quote }}
+  sslMode: disable
+
+secrets:
+  # The chart builds the connection string Secret from appDb.
+  createDbSecret: true
+  dgxcTenantCredSecretName: ""
+
+temporal:
+  host: temporal-frontend.temporal.svc.cluster.local
+  port: 7233
+
+spiffe:
+  enabled: {{ .Values.spire.enabled }}
+  trustDomain: {{ $trustDomain | quote }}
+  spire:
+    className: spire-mgmt-spire
+    # Where node user data points SPIRE agents. Port 8081 is the server Service.
+    serverAddress: spire-server.spire-server.svc.cluster.local
+    serverPort: "8081"
+
+nvkeOIDCAuth:
+  enabled: false
+
+# The controller runs its Cluster API controllers and gets RBAC for them.
+capi:
+  enabled: true
+  rbac:
+    create: true
+
+supportedInfraProviders: {{ .Values.controller.supportedInfraProviders | quote }}
+controllers:
+  nico:
+    enabled: {{ .Values.controller.nicoControllers }}
+
+profiles:
+  path: /profiles
+cni:
+  installAfterInit: true
+allowControlPlaneWithoutVIP: {{ .Values.controller.allowControlPlaneWithoutVIP }}
+
+env:
+  - name: NODE_AGENT_PORT
+    value: {{ .Values.site.nodeAgentPort | quote }}
+{{- if $oidcProviders }}
+
+oidc:
+  providers:
+    {{- toYaml $oidcProviders | nindent 4 }}
+{{- end }}
