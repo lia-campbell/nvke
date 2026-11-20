@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Binds the artifacts of a release inventory to this catalog.
+# A chart binding sets the chart reference, version and archive digest.
+# An image binding writes the repository and digest into a values file.
+# Third-party images stay at their chart defaults in this demo.
+apiVersion: aicr.run/v1beta1
+kind: ArtifactBindings
+charts:
+  controller-chart:
+    component: nvke-controller
+  postgresql-chart:
+    component: postgres
+  temporal-chart:
+    component: temporal
+  spire-crds-chart:
+    component: spire-crds
+  spire-chart:
+    component: spire
+images:
+  cwe:
+    targets:
+      - component: nvke-controller
+        valuesFile: components/nvke-controller/values.yaml
+        write:
+          repository: /image/repository
+          digest: /image/digest
+          clearTag: /image/tag
+ignoredArtifacts: {}

@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# The inputs of the seed bundle: the artifact inventory, the deployer, and
+# the values the operator sets at install time.
+#
+# The Makefile passes the catalog with --data and the seed overlay with
+# --recipe, so this file names neither.
+apiVersion: aicr.run/v1beta1
+kind: AICRConfig
+metadata:
+  name: nvke-seed
+spec:
+  recipe:
+    # Only the catalog in this directory is read. AICR's own catalog is not.
+    externalOnly: true
+    artifacts:
+      # AICR has no flag for this path and resolves it against the working
+      # directory. The Makefile replaces it with INVENTORY.
+      inventory: inventory.yaml
+  bundle:
+    deployment:
+      deployer: helmfile
+      # A dynamic value moves from values.yaml to the cluster-values.yaml of
+      # its component. The operator edits it there before `helmfile apply`.
+      dynamic:
+        # The PostgreSQL chart takes its password as a value. It cannot read
+        # one from an existing Secret, so the operator sets it here.
+        - postgres:auth.password
+        - spire:global.spire.clusterName
+        - spire:global.spire.trustDomain
+        - spire:spire-server.adminIDs
+        - nvke-controller:spiffe.trustDomain
+        - nvke-controller:service.port
+        - nvke-controller:allowControlPlaneWithoutVIP
